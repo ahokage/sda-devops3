@@ -1,0 +1,22 @@
+SPECS: 
+	Show weather for next week (API)
+		weather
+	Tell me a joke (API)
+		jokes
+	Show me today's date (Buil-in)
+	Show me song lyrics (Local data)
+		lyrics
+	Tell me what activity should I do today (API)
+		activity
+	
+TECHINICAL REQUIREMENTS
+	Installable
+		Install > 	Ask for username-
+					Save username in external file-
+					Check if App already installed-
+					Ask if users wants to start app-
+	Uninstallable >
+					Should remove username external file-
+	Menu (infinite loop)
+	Save configs in files-
+	Exec external scripts
