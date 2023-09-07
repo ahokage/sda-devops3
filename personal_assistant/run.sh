@@ -6,7 +6,9 @@ SONG_MENU_EXIT_CODE=0
 IS_NUMBER_EXPR='^[0-9]+$'
 LYRICS_FOLDER_PATH='resources/lyrics'
 WEATHER_SCRIPT_PATH='resources/weather/weather.sh'
-
+ACTIVITY_SCRIPT_PATH='resources/activities/activity.sh'
+JOKES_SCRIPT_PATH='resources/jokes/jokes.sh'
+LOGS_PATH='logs'
 
 #check if app installed
 USERNAME=$(<$USERNAME_FILENAME)
@@ -24,9 +26,29 @@ echo "Greetings $USERNAME!"
 
 #functions
 
+function log_action() {
+
+        local DAILY_FILE_NAME=$(date +%F)
+        local DAILY_FILE_NAME=$(date +%F).log
+        local FULL_LOG_PATH=$LOGS_PATH/$DAILY_FILE_NAME
+        local LOG_LINE=$1
+
+        #check if daily file exists
+        if ! [ -f $FULL_LOG_PATH ]
+        then
+                touch $FULL_LOG_PATH
+        fi
+
+        #log action
+        if ! [ -z "$LOG_LINE" ]
+        then
+                echo "$(date +'%F %T') User $USERNAME -> $LOG_LINE" >> $FULL_LOG_PATH
+        fi
+}
+
 function display_menu() {
 	
-	declare -a menu_items=('Show me the weather for next week!' 'Tell me a joke!' 'Show me the date!' 'Show me song lyrics!' 'Tell me what activity should I do Today?')
+	declare -a menu_items=('Show me the weather for next week!' 'Tell me a joke!' 'Show me the date!' 'Show me song lyrics!' 'Tell me what activity should I do Today?' 'Search for words in song' 'Show today''s logs' )
 	
 	local COUNTER=1
 	for ((i=0; i<${#menu_items[@]}; i++))
@@ -88,9 +110,55 @@ function display_song_list_menu() {
 	done	
 }
 
+function check_and_execute_scripts() {
+	local SCRIPT_PATH=$1
+
+	if [ -z $SCRIPT_PATH ]
+	then
+		echo "Parameter not provided!"
+	elif ! [ -f $SCRIPT_PATH ]
+	then
+		echo "$SCRIPT_PATH does not exist"
+	elif ! [ -x $SCRIPT_PATH ]
+	then
+		echo "You do not have the permission to execute $SCRIPT_PATH"
+	else
+		source $SCRIPT_PATH
+	fi
+}
+
+function search_words_in_lyrics () {
+	#grep -wn 'down' resources/lyrics/*.txt
+	local GREP_RESULT=''
+
+	read -p "Please type the words you want to search: " WORDS
+
+	sleep 0.8
+
+	log_action "Searched lyrics for: $WORDS"
+	GREP_RESULT=$(grep -wniF "$WORDS" $LYRICS_FOLDER_PATH/*.txt)
+       
+	if [ -z "$GREP_RESULT" ]
+	then
+		echo "No results for: '$WORDS'"
+	else
+		echo "$GREP_RESULT"
+	fi
+}
+
+function show_logs() {
+	local DAILY_FILE_NAME=$(date +%F)
+        local DAILY_FILE_NAME=$(date +%F).log
+        local FULL_LOG_PATH=$LOGS_PATH/$DAILY_FILE_NAME
+
+	cat $FULL_LOG_PATH
+}
+
 #App Logic here
+log_action "***************************************************"
+log_action "Starting application"
 while true
-do
+do	
 	echo ""
 	echo "******************************"
 	echo "How may I help you today?"
@@ -104,32 +172,50 @@ do
 
 	case "$OPTION" in
 	"1")
-		sleep 0.8	
-		source $WEATHER_SCRIPT_PATH
+		sleep 0.8
+		log_action "Asked the weather"	
+		check_and_execute_scripts $WEATHER_SCRIPT_PATH
 		;;
 	"2")
-		echo "Joke"
+		sleep 0.8
+		log_action "Asked for a joke"
+		check_and_execute_scripts $JOKES_SCRIPT_PATH
 		;;
 	"3")
 		sleep 0.8
+		log_action "Asked for the date"
 		echo "Today's date is $(date)"
 		;;
 	"4")
-		echo "Lyrics"
+		sleep 0.8
+		log_action "Asked to display song lyrics"
 		display_song_list_menu
 		;;
 	"5")
-		echo "Activity"
+		sleep 0.8
+		log_action "Asked for an activity"
+		check_and_execute_scripts $ACTIVITY_SCRIPT_PATH
+		;;
+	"6")
+		sleep 0.8
+		log_action "Asked to search words in song lyrics"
+		search_words_in_lyrics
+		;;
+	"7")
+		sleep 0.8
+		show_logs
 		;;
 	"$MAIN_MENU_EXIT_CODE")
 		echo "Exiting the app... Goodbye $USERNAME!"
 		sleep 1
-		exit 0;;
+		break;;
 	*)
 		sleep 0.8
 		echo "Please input a correct value!"
 	esac
 done
 
+log_action "Exiting application"
+log_action "***************************************************"
 
 display_menu

@@ -5,6 +5,8 @@ clear
 USERNAME_FILENAME="username.file"
 RUN_FILENAME='run.sh'
 UNINSTALL_FILENAME='uninstall.sh'
+LOGS_FOLDER='logs'
+
 
 if [[ -e $USERNAME_FILENAME ]]
 then
@@ -24,6 +26,9 @@ else
 	echo "Application installing"
 	sleep 3
 	echo $USERNAME > $USERNAME_FILENAME
+	
+	mkdir $LOGS_FOLDER
+
 	echo "Application installed"
 fi
 
